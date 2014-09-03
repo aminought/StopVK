@@ -6,33 +6,47 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>717</width>
-    <height>463</height>
+    <width>722</width>
+    <height>460</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QLabel" name="label">
+  <widget class="QWebView" name="webView">
    <property name="geometry">
     <rect>
-     <x>290</x>
+     <x>10</x>
      <y>10</y>
-     <width>131</width>
-     <height>51</height>
+     <width>701</width>
+     <height>391</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <pointsize>25</pointsize>
-    </font>
+   <property name="url">
+    <url>
+     <string>about:blank</string>
+    </url>
    </property>
-   <property name="text">
-    <string>Stop VK!</string>
+  </widget>
+  <widget class="QTextBrowser" name="url_label">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>410</y>
+     <width>701</width>
+     <height>41</height>
+    </rect>
    </property>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QWebView</class>
+   <extends>QWidget</extends>
+   <header>QtWebKitWidgets/QWebView</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
