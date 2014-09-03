@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QUrl>
+#include "user.h"
 
 namespace Ui {
 class Dialog;
@@ -15,6 +16,11 @@ class Dialog : public QDialog
 public:
     explicit Dialog(QWidget *parent = 0);
     ~Dialog();
+
+    User* user;
+
+public slots:
+    void get_start(QUrl url);
 
 private:
     Ui::Dialog *ui;

@@ -4,6 +4,7 @@
 #include <QSslSocket>
 #include <QtNetwork>
 #include <QMessageBox>
+#include "user.h"
 
 Dialog::Dialog(QWidget *parent) :
     QDialog(parent),
@@ -18,11 +19,20 @@ Dialog::Dialog(QWidget *parent) :
     url.addQueryItem("display","popup");
     url.addQueryItem("response_type","token");
     ui->webView->load(QUrl(url.toString()));
-    ui->url_label->setText(url.toString());
     ui->webView->show();
+    connect(ui->webView,SIGNAL(urlChanged(QUrl)),this,SLOT(get_start(QUrl)));
 }
 
 Dialog::~Dialog()
 {
     delete ui;
+}
+
+void Dialog::get_start(QUrl token_url) {
+    QString url(token_url.toString());
+    url.replace("#","&");
+    QUrlQuery tok_url(url);
+    QString token = tok_url.queryItemValue("access_token");
+    QString id = tok_url.queryItemValue("user_id");
+    user = new User(token,id);
 }

@@ -19,23 +19,13 @@
      <x>10</x>
      <y>10</y>
      <width>701</width>
-     <height>391</height>
+     <height>441</height>
     </rect>
    </property>
    <property name="url">
     <url>
      <string>about:blank</string>
     </url>
-   </property>
-  </widget>
-  <widget class="QTextBrowser" name="url_label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>410</y>
-     <width>701</width>
-     <height>41</height>
-    </rect>
    </property>
   </widget>
  </widget>
