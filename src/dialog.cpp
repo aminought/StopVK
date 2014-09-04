@@ -26,11 +26,13 @@ Dialog::Dialog(QWidget *parent) :
     if(token=="") {
         QUrlQuery url("https://oauth.vk.com/authorize?");
         url.addQueryItem("client_id","4534170");
-        url.addQueryItem("scope","groups");
+        url.addQueryItem("scope","friends,photos,audio,video,docs,notes,status,wall,groups,messages");
         url.addQueryItem("redirect_uri","http://oauth.vk.com/blank.html");
-        url.addQueryItem("display","popup");
+        url.addQueryItem("display","page");
         url.addQueryItem("response_type","token");
         ui->webView->load(QUrl(url.toString()));
+        ui->webView->setGeometry(0,0,800,600);
+        this->setFixedSize(800,600);
         ui->webView->show();
         connect(ui->webView,SIGNAL(urlChanged(QUrl)),this,SLOT(get_start(QUrl)));
     } else {
@@ -46,11 +48,11 @@ Dialog::~Dialog()
 }
 
 void Dialog::get_start(QUrl token_url) {
-    if(token_url.toString()!="https://oauth.vk.com/authorize?&client_id=4534170&scope=groups&redirect_uri=http://oauth.vk.com/blank.html&display=popup&response_type=token") {
-        QString url(token_url.toString());
-        url.replace("#","&");
-        QUrlQuery tok_url(url);
-        QString token = tok_url.queryItemValue("access_token");
+    QString url(token_url.toString());
+    url.replace("#","&");
+    QUrlQuery tok_url(url);
+    QString token = tok_url.queryItemValue("access_token");
+    if(token!="") {
         QString expire = tok_url.queryItemValue("expires_in");
         QString id = tok_url.queryItemValue("user_id");
         user = new User(token,id,expire);
@@ -66,8 +68,8 @@ void Dialog::get_start(QUrl token_url) {
 void Dialog::show_delete_button() {
     QPushButton* delete_button = new QPushButton(this);
     delete_button->setText("Удалить аккаунт ВКонтакте");
-    delete_button->setGeometry(QRect(100,100,200,50));
+    delete_button->setGeometry(QRect(10,10,200,50));
     ui->webView->hide();
     delete_button->show();
-    this->resize(400,250);
+    this->setFixedSize(220,400);
 }

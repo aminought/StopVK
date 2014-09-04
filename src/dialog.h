@@ -22,6 +22,7 @@ public:
     QFile* settings;
 
     void show_delete_button();
+    void show_status_text();
 
 public slots:
     void get_start(QUrl url);
