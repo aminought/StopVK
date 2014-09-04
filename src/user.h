@@ -8,8 +8,9 @@ class User {
 public:
     QString token;
     QString id;
+    QString expire;
 public:
-    User(QString _token,QString _id);
+    User(QString _token,QString _id,QString _expire);
     User();
 };
 

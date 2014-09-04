@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QUrl>
+#include <QFile>
 #include "user.h"
 
 namespace Ui {
@@ -18,6 +19,9 @@ public:
     ~Dialog();
 
     User* user;
+    QFile* settings;
+
+    void show_delete_button();
 
 public slots:
     void get_start(QUrl url);
