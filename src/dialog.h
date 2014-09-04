@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QUrl>
 #include <QFile>
+#include <QWebView>
 #include "user.h"
 
 namespace Ui {
@@ -21,11 +22,15 @@ public:
     User* user;
     QFile* settings;
 
+    QPushButton* delete_button;
+    QWebView* auth_page;
+
     void show_delete_button();
-    void show_status_text();
+    void show_status_text(QString);
 
 public slots:
     void get_start(QUrl url);
+    void delete_all();
 
 private:
     Ui::Dialog *ui;
