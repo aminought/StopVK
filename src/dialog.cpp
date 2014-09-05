@@ -22,7 +22,7 @@ Dialog::Dialog(QWidget *parent) :
     connect(delete_button,SIGNAL(clicked()),this,SLOT(delete_all()));
 
     //Check saved token
-    user->load_token();
+    user->load_settings();
     if(!user->is_token_valid()) { //if no token
 
         //Construct get request
@@ -82,7 +82,7 @@ void Dialog::get_start(QUrl token_url) {
         user->expire = expire;
 
         //Save token in file
-        user->save_token(token);
+        user->save_settings(token);
         show_delete_dialog();
     }
 }
@@ -102,6 +102,7 @@ void Dialog::delete_all() {
     status->append("Removing began...");
     delete_friends();
     delete_photos();
+    delete_audios();
     status->append("Deleted");
 }
 
@@ -125,7 +126,6 @@ void Dialog::delete_friends() {
         request.addQueryItem("user_id",QString::number(user->friends_vec[i]));
         request.addQueryItem("access_token",user->token);
         QByteArray answer = GET(request);
-        qDebug(answer);
     }
     status->append("Ok");
 }
@@ -138,13 +138,9 @@ void Dialog::delete_photos()
     request.addQueryItem("extended","0");
 
     //Get photos
-    qDebug()<<"Get photos";
-    qDebug()<<request.toString();
     QByteArray photos = GET(request);
-    //QVariantList photos_list = bytearray_to_list(photos);
 
-
-    qDebug()<<"JSON Handle";
+    //JSON Handle
     QString rep(photos);
     QJsonDocument json_doc = QJsonDocument::fromJson(rep.toUtf8());
     QJsonObject json = json_doc.object();
@@ -157,19 +153,51 @@ void Dialog::delete_photos()
         qDebug()<<info["pid"].toInt();
     }
 
-
     //Delete photos
-    qDebug()<<"Delete photos";
     for(int i=0;i<photos_list.size();++i) {
         QUrlQuery request("https://api.vk.com/method/photos.delete?");
         request.addQueryItem("access_token",user->token);
-        qDebug()<<"Send";
-        qDebug()<<photos_list[i];
         request.addQueryItem("photo_id",QString::number(photos_list[i].toInt()));
-        qDebug()<<request.toString();
         QByteArray answer = GET(request);
-        qDebug()<<"Get";
-        qDebug(answer);
+    }
+    status->append("Ok");
+}
+
+void Dialog::delete_audios()
+{
+    status->append("Removing audios...");
+    QUrlQuery request("https://api.vk.com/method/audio.get?");
+    request.addQueryItem("access_token",user->token);
+    request.addQueryItem("owner_id",user->id);
+    request.addQueryItem("count","6000");
+    request.addQueryItem("v","5.24");
+
+    //Get audios
+    QByteArray audios = GET(request);
+    qDebug()<<audios;
+
+    //JSON Handle
+    QString rep(audios);
+    QJsonDocument json_doc = QJsonDocument::fromJson(rep.toUtf8());
+    QJsonObject json = json_doc.object();
+    QJsonObject response = json["response"].toObject();
+    QVariantList audios_list;
+    int count = response["count"].toInt();
+    QJsonArray items = response["items"].toArray();
+    qDebug()<<count;
+    for(int i=0;i<count;++i) {
+        QJsonObject item = items[i].toObject();
+        audios_list.push_back(item["id"].toInt());
+        qDebug()<<item["id"].toInt();
+    }
+
+    //Delete audios
+    for(int i=0;i<audios_list.size();++i) {
+        QUrlQuery request("https://api.vk.com/method/audio.delete?");
+        request.addQueryItem("access_token",user->token);
+        request.addQueryItem("owner_id",user->id);
+        request.addQueryItem("audio_id",QString::number(audios_list[i].toInt()));
+        QByteArray answer = GET(request);
     }
     status->append("Ok");
 }
@@ -177,8 +205,6 @@ void Dialog::delete_photos()
 QVariantList Dialog::bytearray_to_list(QByteArray array) {
 
     //Get JSON and return list
-    qDebug()<<"JSON";
-    qDebug()<<array;
     QString rep(array);
     QJsonDocument json_doc = QJsonDocument::fromJson(rep.toUtf8());
     QJsonObject json_obj = json_doc.object();

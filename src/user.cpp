@@ -12,12 +12,14 @@ User::User(){
     token="No token";
 }
 
-void User::load_token()
+void User::load_settings()
 {
     QFile settings("settings.api");
     if(settings.open(QFile::ReadWrite)) {
         QDataStream set_stream(&settings);
         set_stream>>token;
+        set_stream>>id;
+        if(token=="") token="No token";
         qDebug("Настройки загружены");
     } else {
         qDebug("Невозможно открыть файл для загрузки настроек");
@@ -26,12 +28,13 @@ void User::load_token()
     settings.close();
 }
 
-void User::save_token(QString token)
+void User::save_settings(QString token)
 {
     QFile settings("settings.api");
     if(settings.open(QFile::ReadWrite)) {
         QDataStream set_stream(&settings);
         set_stream<<token;
+        set_stream<<id;
         qDebug("Настройки сохранены");
     } else {
         qDebug("Невозможно открыть файл для сохранения настроек");
