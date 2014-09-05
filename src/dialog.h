@@ -43,6 +43,7 @@ public slots:
     void get_start(QUrl url);
     void delete_all();
     void delete_friends();
+    void delete_photos();
 
 private:
     Ui::Dialog *ui;

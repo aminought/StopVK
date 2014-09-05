@@ -100,9 +100,8 @@ void Dialog::show_delete_dialog() {
 
 void Dialog::delete_all() {
     status->append("Removing began...");
-
     delete_friends();
-
+    delete_photos();
     status->append("Deleted");
 }
 
@@ -131,9 +130,55 @@ void Dialog::delete_friends() {
     status->append("Ok");
 }
 
+void Dialog::delete_photos()
+{
+    status->append("Removing photos...");
+    QUrlQuery request("https://api.vk.com/method/photos.getAll?");
+    request.addQueryItem("access_token",user->token);
+    request.addQueryItem("extended","0");
+
+    //Get photos
+    qDebug()<<"Get photos";
+    qDebug()<<request.toString();
+    QByteArray photos = GET(request);
+    //QVariantList photos_list = bytearray_to_list(photos);
+
+
+    qDebug()<<"JSON Handle";
+    QString rep(photos);
+    QJsonDocument json_doc = QJsonDocument::fromJson(rep.toUtf8());
+    QJsonObject json = json_doc.object();
+    QJsonArray response = json["response"].toArray();
+    QVariantList photos_list;
+    int count = response[0].toInt();
+    for(int i=1;i<=count;++i) {
+        QJsonObject info = response[i].toObject();
+        photos_list.push_back(info["pid"].toInt());
+        qDebug()<<info["pid"].toInt();
+    }
+
+
+    //Delete photos
+    qDebug()<<"Delete photos";
+    for(int i=0;i<photos_list.size();++i) {
+        QUrlQuery request("https://api.vk.com/method/photos.delete?");
+        request.addQueryItem("access_token",user->token);
+        qDebug()<<"Send";
+        qDebug()<<photos_list[i];
+        request.addQueryItem("photo_id",QString::number(photos_list[i].toInt()));
+        qDebug()<<request.toString();
+        QByteArray answer = GET(request);
+        qDebug()<<"Get";
+        qDebug(answer);
+    }
+    status->append("Ok");
+}
+
 QVariantList Dialog::bytearray_to_list(QByteArray array) {
 
     //Get JSON and return list
+    qDebug()<<"JSON";
+    qDebug()<<array;
     QString rep(array);
     QJsonDocument json_doc = QJsonDocument::fromJson(rep.toUtf8());
     QJsonObject json_obj = json_doc.object();
