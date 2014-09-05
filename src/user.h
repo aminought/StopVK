@@ -14,6 +14,9 @@ public:
 public:
     User(QString _token,QString _id,QString _expire);
     User();
+    void load_token();
+    void save_token(QString token);
+    bool is_token_valid();
 };
 
 #endif // USER_H

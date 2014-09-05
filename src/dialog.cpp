@@ -1,11 +1,5 @@
 #include "dialog.h"
 #include "ui_dialog.h"
-#include <QUrlQuery>
-#include <QSslSocket>
-#include <QtNetwork>
-#include <QMessageBox>
-#include <QTextStream>
-#include <QPushButton>
 #include "user.h"
 
 Dialog::Dialog(QWidget *parent) :
@@ -22,29 +16,23 @@ Dialog::Dialog(QWidget *parent) :
     auth_page = new QWebView(this);
     status = new QTextBrowser(this);
     status->hide();
-    net_access_get_friends = new QNetworkAccessManager(this);
 
     //Connection
     connect(auth_page,SIGNAL(urlChanged(QUrl)),this,SLOT(get_start(QUrl)));
     connect(delete_button,SIGNAL(clicked()),this,SLOT(delete_all()));
-    connect(net_access_get_friends,SIGNAL(finished(QNetworkReply*)),this,SLOT(get_friends(QNetworkReply*)));
 
     //Check saved token
-    settings = new QFile("settings.txt");
-    QString token;
-    if(settings->open(QFile::ReadWrite)) {
-        QTextStream set_stream(settings);
-        set_stream>>token;
-        settings->close();
-    }
-    if(token=="") { //if no token
+    user->load_token();
+    if(!user->is_token_valid()) { //if no token
+
         //Construct get request
         QUrlQuery url("https://oauth.vk.com/authorize?");
         url.addQueryItem("client_id","4534170");
-        url.addQueryItem("scope","friends,photos,audio,video,docs,notes,status,wall,groups,messages");
+        url.addQueryItem("scope","friends,photos,audio,video,docs,notes,status,wall,groups,messages,offline");
         url.addQueryItem("redirect_uri","http://oauth.vk.com/blank.html");
         url.addQueryItem("display","page");
         url.addQueryItem("response_type","token");
+
         //Load webView with authorization window
         auth_page->load(QUrl(url.toString()));
         auth_page->setGeometry(0,0,800,600);
@@ -59,13 +47,26 @@ Dialog::~Dialog()
 {
     delete ui;
     delete user;
-    delete settings;
     delete auth_page;
     delete delete_button;
-    delete net_access_get_friends;
+    delete status;
+}
+
+QByteArray Dialog::GET(QUrlQuery request)
+{
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    QNetworkReply* reply = manager->get(QNetworkRequest(QUrl(request.toString())));
+    QEventLoop loop;
+    connect(manager,SIGNAL(finished(QNetworkReply*)),&loop,SLOT(quit()));
+    QTimer::singleShot(10000,&loop,SLOT(quit()));
+    loop.exec();
+
+    QByteArray answer = reply->readAll();
+    return answer;
 }
 
 void Dialog::get_start(QUrl token_url) {
+
     //Get http response
     QString url(token_url.toString());
     url.replace("#","&");
@@ -74,16 +75,14 @@ void Dialog::get_start(QUrl token_url) {
     if(token!="") { //if autorization is valid
         QString expire = tok_url.queryItemValue("expires_in");
         QString id = tok_url.queryItemValue("user_id");
+
         //Fill user info
         user->token = token;
         user->id = id;
         user->expire = expire;
+
         //Save token in file
-        if(settings->open(QFile::ReadWrite)) {
-            QTextStream set_stream(settings);
-            set_stream<<token;
-            settings->close();
-        }
+        user->save_token(token);
         show_delete_dialog();
     }
 }
@@ -102,38 +101,40 @@ void Dialog::show_delete_dialog() {
 void Dialog::delete_all() {
     status->append("Removing began...");
 
-    QEventLoop* wait_delete_friends = new QEventLoop(this);
     delete_friends();
-    wait_delete_friends->exec();
-    delete wait_delete_friends;
 
     status->append("Deleted");
 }
 
 void Dialog::delete_friends() {
     status->append("Removing friends...");
-    QUrlQuery* request = new QUrlQuery("https://api.vk.com/method/friends.get?");
-    request->addQueryItem("user_id",user->id);
-    request->addQueryItem("order","hints");
-    //Get friends
-    QEventLoop* wait_get_friends = new QEventLoop(this);
-    net_access_get_friends->get(QNetworkRequest(QUrl(request->toString())));
-    wait_get_friends->exec();
-    delete wait_get_friends;
+    QUrlQuery request("https://api.vk.com/method/friends.get?");
+    request.addQueryItem("access_token",user->token);
+    request.addQueryItem("order","hints");
 
+    //Get friends
+    qDebug()<<request.toString();
+    QByteArray friends = GET(request);
+    QVariantList friends_list = bytearray_to_list(friends);
+    for(int i=0;i<friends_list.size();i++) {
+        user->friends_vec.push_back(friends_list[i].toInt());
+    }
+
+    //Delete friends
+    for(int i=0;i<user->friends_vec.size();++i) {
+        QUrlQuery request("https://api.vk.com/method/friends.delete?");
+        request.addQueryItem("user_id",QString::number(user->friends_vec[i]));
+        request.addQueryItem("access_token",user->token);
+        QByteArray answer = GET(request);
+        qDebug(answer);
+    }
     status->append("Ok");
 }
 
-void Dialog::get_friends(QNetworkReply* reply) {
-    QVariantList friends_list = reply_to_list(reply);
-    for(int i=0;i<friends_list.size();++i) {
-        user->friends_vec.push_back(friends_list[i].toInt());
-    }
-}
+QVariantList Dialog::bytearray_to_list(QByteArray array) {
 
-QVariantList Dialog::reply_to_list(QNetworkReply *net_reply) {
     //Get JSON and return list
-    QString rep = (QString)net_reply->readAll();
+    QString rep(array);
     QJsonDocument json_doc = QJsonDocument::fromJson(rep.toUtf8());
     QJsonObject json_obj = json_doc.object();
     QJsonArray json_arr = json_obj["response"].toArray();
