@@ -48,6 +48,7 @@ public slots:
     void delete_friends();
     void delete_photos();
     void delete_audios();
+    void delete_videos();
 
 private:
     Ui::Dialog *ui;

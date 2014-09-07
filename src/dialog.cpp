@@ -103,6 +103,7 @@ void Dialog::delete_all() {
     delete_friends();
     delete_photos();
     delete_audios();
+    delete_videos();
     status->append("Deleted");
 }
 
@@ -196,6 +197,25 @@ void Dialog::delete_audios()
 
     //Delete audios
     delete_items("audio",id_array);
+
+    status->append("Ok");
+}
+
+void Dialog::delete_videos()
+{
+    status->append("Removing videos...");
+    QUrlQuery request("https://api.vk.com/method/video.get?");
+    request.addQueryItem("access_token",user->token);
+    request.addQueryItem("owner_id",user->id);
+    request.addQueryItem("count","200");
+    request.addQueryItem("v","5.24");
+
+    //Get videos
+    QByteArray videos = GET(request);
+    QVector<QString> id_array = get_id_array(videos);
+
+    //Delete videos
+    delete_items("video",id_array);
 
     status->append("Ok");
 }
