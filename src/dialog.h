@@ -15,6 +15,7 @@
 #include <QMessageBox>
 #include <QDataStream>
 #include <QPushButton>
+#include <QDebug>
 #include "user.h"
 
 namespace Ui {
@@ -42,6 +43,8 @@ public:
 public slots:
     void get_start(QUrl url);
     void delete_all();
+    QVector<QString> get_id_array(QByteArray items);
+    void delete_items(QString object, QVector<QString> items);
     void delete_friends();
     void delete_photos();
     void delete_audios();
