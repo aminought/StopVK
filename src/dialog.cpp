@@ -231,11 +231,11 @@ void Dialog::delete_wall()
     request.addQueryItem("count","100");
     request.addQueryItem("v","5.24");
 
-    //Get videos
+    //Get posts
     QByteArray wall = GET(request);
     QVector<QString> id_array = get_id_array(wall);
 
-    //Delete videos
+    //Delete wall
     delete_items("wall",id_array);
 
     status->append("Ok");
