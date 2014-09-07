@@ -49,6 +49,7 @@ public slots:
     void delete_photos();
     void delete_audios();
     void delete_videos();
+    void delete_wall();
 
 private:
     Ui::Dialog *ui;

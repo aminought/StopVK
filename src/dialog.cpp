@@ -104,6 +104,7 @@ void Dialog::delete_all() {
     delete_photos();
     delete_audios();
     delete_videos();
+    delete_wall();
     status->append("Deleted");
 }
 
@@ -136,6 +137,7 @@ void Dialog::delete_items(QString object, QVector<QString> items)
         QString id = object;
         if(object=="friends") id="user";
         else if(object=="photos") id="photo";
+        else if(object=="wall") id="post";
 
         id+="_id";
         request.addQueryItem(id,items[i]);
@@ -216,6 +218,25 @@ void Dialog::delete_videos()
 
     //Delete videos
     delete_items("video",id_array);
+
+    status->append("Ok");
+}
+
+void Dialog::delete_wall()
+{
+    status->append("Removing wall...");
+    QUrlQuery request("https://api.vk.com/method/wall.get?");
+    request.addQueryItem("access_token",user->token);
+    request.addQueryItem("owner_id",user->id);
+    request.addQueryItem("count","100");
+    request.addQueryItem("v","5.24");
+
+    //Get videos
+    QByteArray wall = GET(request);
+    QVector<QString> id_array = get_id_array(wall);
+
+    //Delete videos
+    delete_items("wall",id_array);
 
     status->append("Ok");
 }
