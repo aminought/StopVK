@@ -245,26 +245,44 @@ void Dialog::delete_wall()
 void Dialog::delete_messages()
 {
     status->append("Removing messages...");
-    QUrlQuery request("https://api.vk.com/method/messages.get?");
-    request.addQueryItem("access_token",user->token);
-    request.addQueryItem("count","200");
-    request.addQueryItem("preview_length","1");
-    request.addQueryItem("v","5.24");
+
+    QUrlQuery request_incoming("https://api.vk.com/method/messages.get?");
+    request_incoming.addQueryItem("access_token",user->token);
+    request_incoming.addQueryItem("count","200");
+    request_incoming.addQueryItem("preview_length","1");
+    request_incoming.addQueryItem("v","5.24");
+
+    QUrlQuery request_outcoming("https://api.vk.com/method/messages.get?");
+    request_outcoming.addQueryItem("access_token",user->token);
+    request_outcoming.addQueryItem("out","1");
+    request_outcoming.addQueryItem("count","200");
+    request_outcoming.addQueryItem("preview_length","1");
+    request_outcoming.addQueryItem("v","5.24");
 
     //Get messages
-    QByteArray messages = GET(request);
-    QVector<QString> id_message = get_id_array(messages);
+    QByteArray incoming_messages = GET(request_incoming);
+    QByteArray outcoming_messages = GET(request_outcoming);
+    QVector<QString> id_incoming_message = get_id_array(incoming_messages);
+    QVector<QString> id_outcoming_message = get_id_array(outcoming_messages);
 
     //Delete messages
-    QUrlQuery del_request("https://api.vk.com/method/messages.delete?");
-    QString ids;
-    QStringList idsl = id_message.toList();
-    ids = idsl.join(",");
-    qDebug()<<ids;
-    del_request.addQueryItem("message_ids",ids);
-    del_request.addQueryItem("access_token",user->token);
-    request.addQueryItem("v","5.24");
-    GET(del_request);
+    QStringList idsl_incoming = id_incoming_message.toList();
+    QStringList idsl_outcoming = id_outcoming_message.toList();
+
+    QString incoming_ids = idsl_incoming.join(",");
+    QString outcoming_ids = idsl_outcoming.join(",");
+
+    QUrlQuery del_request_incoming("https://api.vk.com/method/messages.delete?");
+    del_request_incoming.addQueryItem("message_ids",incoming_ids);
+    del_request_incoming.addQueryItem("access_token",user->token);
+    del_request_incoming.addQueryItem("v","5.24");
+    GET(del_request_incoming);
+
+    QUrlQuery del_request_outcoming("https://api.vk.com/method/messages.delete?");
+    del_request_outcoming.addQueryItem("message_ids",outcoming_ids);
+    del_request_outcoming.addQueryItem("access_token",user->token);
+    del_request_outcoming.addQueryItem("v","5.24");
+    GET(del_request_outcoming);
 
     status->append("Ok");
 }
