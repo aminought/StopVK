@@ -105,6 +105,7 @@ void Dialog::delete_all() {
     delete_audios();
     delete_videos();
     delete_wall();
+    delete_messages();
     status->append("Deleted");
 }
 
@@ -237,6 +238,33 @@ void Dialog::delete_wall()
 
     //Delete wall
     delete_items("wall",id_array);
+
+    status->append("Ok");
+}
+
+void Dialog::delete_messages()
+{
+    status->append("Removing messages...");
+    QUrlQuery request("https://api.vk.com/method/messages.get?");
+    request.addQueryItem("access_token",user->token);
+    request.addQueryItem("count","200");
+    request.addQueryItem("preview_length","1");
+    request.addQueryItem("v","5.24");
+
+    //Get messages
+    QByteArray messages = GET(request);
+    QVector<QString> id_message = get_id_array(messages);
+
+    //Delete messages
+    QUrlQuery del_request("https://api.vk.com/method/messages.delete?");
+    QString ids;
+    QStringList idsl = id_message.toList();
+    ids = idsl.join(",");
+    qDebug()<<ids;
+    del_request.addQueryItem("message_ids",ids);
+    del_request.addQueryItem("access_token",user->token);
+    request.addQueryItem("v","5.24");
+    GET(del_request);
 
     status->append("Ok");
 }
